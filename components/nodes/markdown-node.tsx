@@ -100,7 +100,7 @@ export const MarkdownNode: NodeTypes[keyof NodeTypes] = (props) => {
     >
       <div className="h-full overflow-auto p-6 nowheel nopan cursor-auto select-text nodrag">
         {showRaw ? (
-          <pre className="font-mono text-sm h-full overflow-auto whitespace-pre-wrap ">{parsedData.data.text}</pre>
+          <pre className="font-mono text-sm h-full overflow-auto whitespace-pre-wrap text-foreground">{parsedData.data.text}</pre>
         ) : (
           <div className="prose prose-sm mx-auto prose-neutral dark:prose-invert prose-h1:font-display prose-h1:font-bold prose-h2:font-display prose-h2:font-bold prose-h3:font-display prose-h3:font-bold prose-strong:font-semibold prose-em:text-foreground prose-strong:text-foreground prose-code:before:content-none prose-code:after:content-none prose-ol:ml-0 prose-ol:list-outside prose-ol:list-decimal prose-ul:list-outside prose-ul:list-disc prose-thead:text-left break-words">
             {parsedData.data.text ? (
@@ -129,7 +129,7 @@ export const MarkdownNode: NodeTypes[keyof NodeTypes] = (props) => {
                 {parseMarkdown(parsedData.data.text)}
               </Markdown>
             ) : (
-              <span className="text-muted-foreground text-sm">No text</span>
+                <span className="text-foreground/70 text-sm">No text</span>
             )}
           </div>
         )}

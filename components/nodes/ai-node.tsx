@@ -25,6 +25,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { ErrorNode } from "./error-node";
 import { MarkdownNodeData } from "./markdown-node";
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group";
+import type { GroqProviderOptions } from "@ai-sdk/groq";
 
 export const aiNodeDataSchema = baseNodeDataSchema.extend({
   systemPrompt: z.string(),
@@ -91,6 +92,16 @@ export const computeAi: ComputeNodeFunction<AiNodeData> = async (
           },
           responseModalities: ["TEXT"],
         } satisfies GoogleGenerativeAIProviderOptions,
+        groq: (
+          data.reasoning
+            ? {
+                reasoningFormat: "parsed",
+                reasoningEffort: "default",
+              }
+            : {
+                reasoningFormat: "hidden",
+              }
+        ) satisfies GroqProviderOptions,
         anthropic: {
           thinking: {
             type: data.reasoning ? "enabled" : "disabled",

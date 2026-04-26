@@ -45,13 +45,14 @@ export const AnnotationNode: NodeTypes[keyof NodeTypes] = (props) => {
   return (
     <div
       className={cn(
-        "flex flex-col group rounded-xl hover:border-border h-full transition-all text-card-foreground border  border-transparent hover:bg-card/50",
-        props.selected && "border-border bg-card/50"
+        "flex flex-col group rounded-xl transition-all text-card-foreground border border-transparent bg-transparent shadow-none",
+        "group-hover:border-border/70 group-hover:bg-card group-hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)]",
+        props.selected && "border-border bg-card shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
       )}
     >
       <div
         className={cn(
-          "opacity-0 bg-muted group-hover:opacity-100 transition-all border-b p-3  flex items-center gap-3 rounded-t-xl",
+          "opacity-0 bg-muted/70 group-hover:opacity-100 transition-all border-b p-3 flex items-center gap-3 rounded-t-xl",
           props.selected && " opacity-100"
         )}
       >
@@ -63,14 +64,14 @@ export const AnnotationNode: NodeTypes[keyof NodeTypes] = (props) => {
         value={parsedData.data.text}
         onChange={handleTextChange}
         placeholder="Type something..."
-        className="nodrag nowheel min-h-0 dark:bg-transparent nopan font-handwriting shadow-none h-full w-full resize-none rounded-xl border-none bg-transparent !ring-0 text-muted-foreground !text-2xl"
+        className="nodrag nowheel min-h-0 dark:bg-transparent nopan font-handwriting shadow-none h-full w-full resize-none rounded-xl border-none bg-transparent !ring-0 text-foreground/80 !text-2xl"
       />
 
       {props.selected && (
         <NodeResizeControl
           minWidth={200}
           minHeight={100}
-          className="!border-none !bg-transparent text-muted-foreground hover:text-foreground"
+          className="!border-none !bg-transparent text-foreground/60 hover:text-foreground"
         >
           <span className="text-xs uppercase tracking-wide">Resize</span>
         </NodeResizeControl>

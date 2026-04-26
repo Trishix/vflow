@@ -1,15 +1,16 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { createGroq } from "@ai-sdk/groq";
 import { createXai } from "@ai-sdk/xai";
-import { LanguageModelV1 } from "ai";
 
 export const providers: Record<
   string,
   {
     models: string[];
     keyUrl: string;
-    createModel: (apiKey: string, modelId: string, reasoning: boolean) => LanguageModelV1;
+    createModel: (apiKey: string, modelId: string, reasoning: boolean) => any;
   }
 > = {
   "Google Generative AI": {
@@ -34,6 +35,25 @@ export const providers: Record<
       return google(modelId, {
         useSearchGrounding: true,
       });
+    },
+  },
+  Groq: {
+    keyUrl: "https://console.groq.com/keys",
+    models: [
+      "gemma2-9b-it",
+      "llama-3.1-8b-instant",
+      "llama-3.3-70b-versatile",
+      "deepseek-r1-distill-llama-70b",
+      "meta-llama/llama-4-scout-17b-16e-instruct",
+      "moonshotai/kimi-k2-instruct-0905",
+      "qwen/qwen3-32b",
+      "qwen-qwq-32b",
+    ],
+    createModel(apiKey, modelId, reasoning) {
+      const groq = createGroq({
+        apiKey,
+      });
+      return groq(modelId);
     },
   },
   OpenAI: {
@@ -83,6 +103,27 @@ export const providers: Record<
         headers: { "anthropic-dangerous-direct-browser-access": "true" },
       });
       return anthropic(modelId);
+    },
+  },
+  OpenRouter: {
+    keyUrl: "https://openrouter.ai/settings/keys",
+    models: [
+      "openai/gpt-4.1-mini",
+      "openai/gpt-4o-mini",
+      "openai/gpt-4.1",
+      "anthropic/claude-sonnet-4",
+      "google/gemini-2.5-flash",
+      "meta-llama/llama-3.3-70b-instruct",
+      "qwen/qwen3-32b",
+      "mistralai/mistral-small-3.1-24b-instruct",
+    ],
+    createModel(apiKey, modelId) {
+      const openrouter = createOpenAICompatible({
+        name: "openrouter",
+        apiKey,
+        baseURL: "https://openrouter.ai/api/v1",
+      });
+      return openrouter(modelId);
     },
   },
   xAI: {

@@ -94,10 +94,19 @@ export interface WorkflowState {
 }
 
 const generateId = () => nanoid();
+const CURRENT_STORAGE_VERSION = 4;
 
 // Create consistent empty arrays to avoid infinite loops
 const EMPTY_NODES: Node[] = [];
 const EMPTY_EDGES: Edge[] = [];
+const LEGACY_TEMPLATE_NAMES = [
+  "Welcome 👋",
+  "Simple proofread ✒️",
+  "Email response ✉️",
+  "Meta prompting 🤯",
+  "Product marketing (advanced)",
+  "Text improver (advanced)",
+] as const;
 
 export const useWorkflowStore = create<WorkflowState>()(
   persist(
@@ -548,6 +557,7 @@ export const useWorkflowStore = create<WorkflowState>()(
     }),
     {
       name: "workflow-storage",
+      version: CURRENT_STORAGE_VERSION,
       storage: createJSONStorage(() => {
         const fallbackStorage: StateStorage = {
           getItem: () => null,
@@ -562,6 +572,85 @@ export const useWorkflowStore = create<WorkflowState>()(
         const storage = window.localStorage;
         return storage && typeof storage.getItem === "function" ? storage : fallbackStorage;
       }),
+      migrate: (persistedState: unknown, _version: number) => {
+        const state = (persistedState ?? {}) as Partial<WorkflowState> & {
+          workflows?: Workflow[];
+          currentWorkflowId?: string | null;
+        };
+
+        if (!Array.isArray(state.workflows)) {
+          return state;
+        }
+
+        const matchesCurrentTemplates =
+          state.workflows.length === templates.length &&
+          state.workflows.every((workflow, index) => workflow.name === templates[index]?.name);
+
+        if (matchesCurrentTemplates) {
+          return {
+            workflows: state.workflows.map((workflow, index) => ({
+              ...templates[index],
+              id: workflow.id,
+              createdAt: workflow.createdAt,
+              updatedAt: workflow.updatedAt,
+            })),
+            currentWorkflowId: state.currentWorkflowId ?? state.workflows[0]?.id ?? null,
+          };
+        }
+
+        const matchesLegacyTemplates =
+          state.workflows.length >= LEGACY_TEMPLATE_NAMES.length &&
+          LEGACY_TEMPLATE_NAMES.every((name, index) => state.workflows?.[index]?.name === name);
+
+        if (matchesLegacyTemplates) {
+          const upgradedWorkflows = [templates[0], ...state.workflows.map((workflow, index) => {
+            const template = templates[index + 1];
+
+            if (!template) {
+              return workflow;
+            }
+
+            return {
+              ...template,
+              id: workflow.id,
+              createdAt: workflow.createdAt,
+              updatedAt: workflow.updatedAt,
+            };
+          })];
+
+          return {
+            workflows: upgradedWorkflows,
+            currentWorkflowId: state.currentWorkflowId ?? upgradedWorkflows[0]?.id ?? null,
+          };
+        }
+
+        const matchesCurrentTemplatesWithoutWelcome =
+          state.workflows.length === templates.length - 1 &&
+          state.workflows.every((workflow, index) => workflow.name === templates[index + 1]?.name);
+
+        if (matchesCurrentTemplatesWithoutWelcome) {
+          const upgradedWorkflows = [
+            templates[0],
+            ...state.workflows.map((workflow, index) => ({
+              ...templates[index + 1],
+              id: workflow.id,
+              createdAt: workflow.createdAt,
+              updatedAt: workflow.updatedAt,
+            })),
+          ];
+
+          return {
+            workflows: upgradedWorkflows,
+            currentWorkflowId: state.currentWorkflowId ?? upgradedWorkflows[0]?.id ?? null,
+          };
+        }
+
+        if (state.workflows[0]?.name === templates[0].name) {
+          return state;
+        }
+
+        return state;
+      },
       partialize: (state) => ({
         workflows: state.workflows.map(getCleanedWorkflow),
         currentWorkflowId: state.currentWorkflowId,

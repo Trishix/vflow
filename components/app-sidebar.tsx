@@ -16,6 +16,7 @@ import {
 import { useWorkflowStore } from "@/lib/workflow-store";
 import { useTheme } from "next-themes";
 import { useEffect, useMemo, useState } from "react";
+import { CirclePlus, FileDown, KeyRound, MoonStar, SunMedium, Workflow as WorkflowIcon } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import ApiKeys from "./api-keys";
 import ImportDialog from "./import-dialog";
@@ -83,13 +84,15 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => createWorkflow()}>
+                <SidebarMenuButton onClick={() => createWorkflow()} className="gap-2">
+                  <CirclePlus className="h-4 w-4" />
                   New Workflow
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <ImportDialog>
-                  <SidebarMenuButton>
+                  <SidebarMenuButton className="gap-2">
+                    <FileDown className="h-4 w-4" />
                     Import
                   </SidebarMenuButton>
                 </ImportDialog>
@@ -121,7 +124,8 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <ApiKeys>
-              <SidebarMenuButton>
+              <SidebarMenuButton className="gap-2">
+                <KeyRound className="h-4 w-4" />
                 API Keys
               </SidebarMenuButton>
             </ApiKeys>
@@ -131,7 +135,9 @@ export function AppSidebar() {
               <SidebarMenuButton
                 onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
                 suppressHydrationWarning
+                className="gap-2"
               >
+                {resolvedTheme === "dark" ? <SunMedium className="h-4 w-4" /> : <MoonStar className="h-4 w-4" />}
                 {resolvedTheme === "dark" ? "Light mode" : "Dark mode"}
               </SidebarMenuButton>
             ) : (

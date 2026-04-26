@@ -48,23 +48,23 @@ export function NodeCard({
   return (
     <div
       className={cn(
-        "flex flex-col bg-card/90 backdrop-blur-xl rounded-[1.25rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] h-full transition-all text-card-foreground border border-white/10",
-        isError && "border-red-500/50 dark:border-red-900/50 bg-red-50/90 dark:bg-red-950/90 shadow-red-500/20"
+        "flex flex-col bg-card rounded-[1.25rem] shadow-[0_8px_30px_rgb(15,23,42,0.10)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] h-full transition-all text-card-foreground border border-border/70",
+        isError && "border-red-500/50 dark:border-red-900/50 bg-red-50 dark:bg-red-950/90 shadow-red-500/20"
       )}
     >
       <div
         className={cn(
-          "bg-card/80 backdrop-blur-md transition-colors border-b p-3 flex items-center gap-3 rounded-t-[1.15rem]",
-          node.selected && "bg-muted/80",
-          isLoading && "dark:bg-blue-500/20 bg-blue-200/50"
+          "bg-muted/50 transition-colors border-b p-3 flex items-center gap-3 rounded-t-[1.15rem]",
+          node.selected && "bg-accent/60",
+          isLoading && "dark:bg-blue-500/20 bg-blue-100"
         )}
       >
         <div
           className={cn(
-            "text-sm text-muted-foreground transition-colors",
-            node.selected && "text-primary",
+            "text-sm text-foreground/80 transition-colors",
+            node.selected && "text-foreground",
             isLoading && "dark:text-white text-foreground",
-            error && "text-red-500"
+            error && "text-red-600"
           )}
         >
           {title}
@@ -80,7 +80,7 @@ export function NodeCard({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" className="-m-1 px-2 text-red-500" size="sm">
+                <Button variant="ghost" className="-m-1 px-2 text-red-600" size="sm">
                   Error
                 </Button>
               </TooltipTrigger>
@@ -104,7 +104,7 @@ export function NodeCard({
         <NodeResizeControl
           minWidth={300}
           minHeight={200}
-          className="hover:text-foreground text-muted-foreground !border-none !bg-transparent"
+          className="hover:text-foreground text-foreground/60 !border-none !bg-transparent"
         >
           <span className="text-xs uppercase tracking-wide">Resize</span>
         </NodeResizeControl>
