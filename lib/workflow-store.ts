@@ -15,6 +15,7 @@ import { createJSONStorage, persist, StateStorage } from "zustand/middleware";
 import { computeNode, ComputeNodeInput } from "./compute";
 import { nanoid } from "nanoid";
 import { newWorkflow, templates } from "./templates";
+import { providers } from "./ai";
 
 // Zod schemas for validation
 const nodeSchema = z.object({
@@ -90,11 +91,12 @@ export interface WorkflowState {
 
   // Node execution
   runNode: (nodeId: string, firstRun?: boolean) => void;
+  runWorkflow: () => void;
   abortAllOperations: () => void;
 }
 
 const generateId = () => nanoid();
-const CURRENT_STORAGE_VERSION = 4;
+const CURRENT_STORAGE_VERSION = 5;
 
 // Create consistent empty arrays to avoid infinite loops
 const EMPTY_NODES: Node[] = [];
@@ -544,6 +546,22 @@ export const useWorkflowStore = create<WorkflowState>()(
         });
       },
 
+      runWorkflow: () => {
+        const currentWorkflow = get().getCurrentWorkflow();
+        if (!currentWorkflow) return;
+
+        const nodes = get().getNodes();
+        const incomingNodeIds = new Set(get().getEdges().map((edge) => edge.target));
+        const rootNodes = nodes.filter((node) => !incomingNodeIds.has(node.id));
+        const startNodes = rootNodes.length > 0 ? rootNodes : nodes;
+
+        startNodes
+          .sort((a, b) => a.position.x - b.position.x)
+          .forEach((node) => {
+            get().runNode(node.id, true);
+          });
+      },
+
       abortAllOperations: () => {
         // Abort current operations
         get().abortController.abort();
@@ -572,11 +590,31 @@ export const useWorkflowStore = create<WorkflowState>()(
         const storage = window.localStorage;
         return storage && typeof storage.getItem === "function" ? storage : fallbackStorage;
       }),
-      migrate: (persistedState: unknown, _version: number) => {
+      migrate: (persistedState: unknown, version: number) => {
         const state = (persistedState ?? {}) as Partial<WorkflowState> & {
           workflows?: Workflow[];
           currentWorkflowId?: string | null;
         };
+
+        // Migration: replace unsupported (v3) AI models with gemini-2.0-flash
+        if (version < 5 && state.workflows) {
+          const supportedModels = new Set(
+            Object.values(providers).flatMap((p) => p.models)
+          );
+
+          state.workflows.forEach((workflow) => {
+            if (workflow.nodes) {
+              const nodes = workflow.nodes as Array<{ type?: string; data?: { modelId?: string } }>;
+              nodes.forEach((node) => {
+                if (node.type === "ai" && node.data?.modelId) {
+                  if (!supportedModels.has(node.data.modelId)) {
+                    node.data.modelId = "gemini-2.0-flash";
+                  }
+                }
+              });
+            }
+          });
+        }
 
         if (!Array.isArray(state.workflows)) {
           return state;

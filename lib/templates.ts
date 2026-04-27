@@ -46,7 +46,7 @@ const aiNode = (
   height,
   data: {
     systemPrompt,
-    modelId: "gemini-2.5-flash",
+    modelId: "gemini-2.0-flash",
     dirty: false,
     loading: false,
     output,
@@ -224,8 +224,8 @@ Support`,
     noteNode(
       "support-note-2",
       "The second AI node turns the structured triage into a customer-ready response.",
-      920,
-      20,
+      720,
+      60,
       400,
       160
     ),

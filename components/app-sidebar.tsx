@@ -16,7 +16,7 @@ import {
 import { useWorkflowStore } from "@/lib/workflow-store";
 import { useTheme } from "next-themes";
 import { useEffect, useMemo, useState } from "react";
-import { CirclePlus, FileDown, KeyRound, MoonStar, SunMedium, Workflow as WorkflowIcon } from "lucide-react";
+import { CirclePlus, FileDown, KeyRound, MoonStar, SunMedium } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import ApiKeys from "./api-keys";
 import ImportDialog from "./import-dialog";

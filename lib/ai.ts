@@ -1,16 +1,12 @@
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { createOpenAI } from "@ai-sdk/openai";
+import { google, anthropic, openai, groq, xai } from "ai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { createGroq } from "@ai-sdk/groq";
-import { createXai } from "@ai-sdk/xai";
 
 export const providers: Record<
   string,
   {
     models: string[];
     keyUrl: string;
-    createModel: (apiKey: string, modelId: string, reasoning: boolean) => any;
+    createModel: (apiKey: string, modelId: string, reasoning?: boolean) => ReturnType<typeof google>;
   }
 > = {
   "Google Generative AI": {
@@ -21,20 +17,12 @@ export const providers: Record<
       "gemini-1.5-pro",
       "gemini-2.0-flash",
       "gemini-2.0-flash-lite",
-      "gemini-2.0-pro-exp-02-05",
-      "gemini-2.0-flash-exp",
-      "gemini-2.5-pro",
       "gemini-2.5-flash",
-      "gemini-exp-1206",
+      "gemini-2.5-pro",
       "gemma-3-27b-it",
     ],
-    createModel(apiKey: string, modelId: string) {
-      const google = createGoogleGenerativeAI({
-        apiKey,
-      });
-      return google(modelId, {
-        useSearchGrounding: true,
-      });
+    createModel(apiKey: string, modelId: string, _reasoning?: boolean) {
+      return google(modelId, { apiKey, useSearchGrounding: true });
     },
   },
   Groq: {
@@ -43,17 +31,17 @@ export const providers: Record<
       "gemma2-9b-it",
       "llama-3.1-8b-instant",
       "llama-3.3-70b-versatile",
+      "llama-3.3-70b-instruct",
+      "llama-4-scout-17b-16e-instruct",
+      "llama-4-maverick-17b-128e-instruct",
       "deepseek-r1-distill-llama-70b",
-      "meta-llama/llama-4-scout-17b-16e-instruct",
-      "moonshotai/kimi-k2-instruct-0905",
-      "qwen/qwen3-32b",
+      "deepseek-r1-distill-qwen-32b",
       "qwen-qwq-32b",
+      "qwen-2.5-32b",
+      "mistral-saba-24b",
     ],
-    createModel(apiKey, modelId, reasoning) {
-      const groq = createGroq({
-        apiKey,
-      });
-      return groq(modelId);
+    createModel(apiKey, modelId, _reasoning?) {
+      return groq(modelId, { apiKey });
     },
   },
   OpenAI: {
@@ -76,11 +64,8 @@ export const providers: Record<
       "chatgpt-4o-latest",
     ],
     createModel(apiKey, modelId, reasoning) {
-      const openai = createOpenAI({
-        apiKey,
-        compatibility: "strict",
-      });
       return openai(modelId, {
+        apiKey,
         reasoningEffort: reasoning ? "medium" : undefined,
       });
     },
@@ -97,12 +82,11 @@ export const providers: Record<
       "claude-3-sonnet-20240229",
       "claude-3-haiku-20240307",
     ],
-    createModel(apiKey, modelId) {
-      const anthropic = createAnthropic({
+    createModel(apiKey, modelId, _reasoning?) {
+      return anthropic(modelId, {
         apiKey,
         headers: { "anthropic-dangerous-direct-browser-access": "true" },
       });
-      return anthropic(modelId);
     },
   },
   OpenRouter: {
@@ -112,12 +96,17 @@ export const providers: Record<
       "openai/gpt-4o-mini",
       "openai/gpt-4.1",
       "anthropic/claude-sonnet-4",
-      "google/gemini-2.5-flash",
+      "anthropic/claude-4-opus",
+      "anthropic/claude-4-sonnet",
       "meta-llama/llama-3.3-70b-instruct",
-      "qwen/qwen3-32b",
+      "meta-llama/llama-4-scout-17b-16e-instruct",
+      "meta-llama/llama-4-maverick-17b-128e-instruct",
       "mistralai/mistral-small-3.1-24b-instruct",
+      "qwen/qwen3-32b",
+      "deepseek/deepseek-chat",
+      "google/gemini-2.0-flash-001",
     ],
-    createModel(apiKey, modelId) {
+    createModel(apiKey, modelId, _reasoning?) {
       const openrouter = createOpenAICompatible({
         name: "openrouter",
         apiKey,
@@ -137,11 +126,8 @@ export const providers: Record<
       "grok-2",
       "grok-beta",
     ],
-    createModel(apiKey, modelId) {
-      const xai = createXai({
-        apiKey,
-      });
-      return xai(modelId);
+    createModel(apiKey, modelId, _reasoning?) {
+      return xai(modelId, { apiKey });
     },
   },
 };

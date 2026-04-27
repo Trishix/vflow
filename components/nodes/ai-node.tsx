@@ -13,8 +13,6 @@ import { useApiKeysStore } from "@/lib/api-key-store";
 import { baseNodeDataSchema } from "@/lib/base-node";
 import { ComputeNodeFunction, ComputeNodeInput, formatInputs } from "@/lib/compute";
 import { useWorkflowStore } from "@/lib/workflow-store";
-import { AnthropicProviderOptions } from "@ai-sdk/anthropic";
-import { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
 import { Handle, Position, type NodeTypes } from "@xyflow/react";
 import { streamText } from "ai";
 import { useCallback, useMemo, useState } from "react";
@@ -25,7 +23,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { ErrorNode } from "./error-node";
 import { MarkdownNodeData } from "./markdown-node";
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group";
-import type { GroqProviderOptions } from "@ai-sdk/groq";
+
 
 export const aiNodeDataSchema = baseNodeDataSchema.extend({
   systemPrompt: z.string(),
@@ -48,7 +46,9 @@ export const computeAi: ComputeNodeFunction<AiNodeData> = async (
     };
   }
 
-  const providerName = Object.keys(providers).find((provider) => providers[provider].models.includes(data.modelId!));
+  const fallbackModelId = data.modelId === "gemini-2.5-flash" ? "gemini-2.0-flash" : data.modelId;
+
+  const providerName = Object.keys(providers).find((provider) => providers[provider].models.includes(fallbackModelId!));
   const provider = providerName ? providers[providerName] : undefined;
   if (!providerName || !provider) {
     return {
@@ -76,55 +76,38 @@ export const computeAi: ComputeNodeFunction<AiNodeData> = async (
   let fullText: string = ""; // include reasoning
   let outputText = "";
 
-  try {
-    const model = provider.createModel(key, data.modelId, data.reasoning ?? false);
+   try {
+     const model = provider.createModel(key, data.modelId, data.reasoning ?? false);
 
-    const res = streamText({
-      model,
-      system: data.systemPrompt,
-      prompt: formatInputs(inputs),
-      abortSignal, // Pass abort signal to AI call
-      providerOptions: {
-        google: {
-          thinkingConfig: {
-            thinkingBudget: data.reasoning ? -1 : 0,
-            includeThoughts: true,
-          },
-          responseModalities: ["TEXT"],
-        } satisfies GoogleGenerativeAIProviderOptions,
-        groq: (
-          data.reasoning
-            ? {
-                reasoningFormat: "parsed",
-                reasoningEffort: "default",
-              }
-            : {
-                reasoningFormat: "hidden",
-              }
-        ) satisfies GroqProviderOptions,
-        anthropic: {
-          thinking: {
-            type: data.reasoning ? "enabled" : "disabled",
-          },
-        } satisfies AnthropicProviderOptions,
-        xai: {
-          reasoningEffort: data.reasoning ? "medium" : null,
-        },
-      },
-    });
+     const streamOptions: Record<string, any> = {
+       model,
+       system: data.systemPrompt,
+       prompt: formatInputs(inputs),
+       abortSignal,
+     };
 
-    const fullstream = res.fullStream;
-    // get the reasoning stream and console log it
-    for await (const chunk of fullstream) {
-      let triggerChildRerender = false;
-      if (chunk.type === "reasoning") {
-        if (fullText.length === 0) fullText += "> ";
-        fullText += chunk.textDelta.replace(/\n/g, "\n> ");
-        triggerChildRerender = true;
-      }
-      if (chunk.type === "text-delta") {
-        outputText += chunk.textDelta;
-        triggerChildRerender = true;
+     // Add reasoning settings for providers that support it
+     if (data.reasoning) {
+       streamOptions.reasoning = {
+         effort: "medium",
+         includeThoughts: true,
+       };
+     }
+
+     const res = streamText(streamOptions);
+
+     const fullstream = res.fullStream;
+     // get the reasoning stream and console log it
+     for await (const chunk of fullstream) {
+       let triggerChildRerender = false;
+       if (chunk.type === "reasoning") {
+         if (fullText.length === 0) fullText += "> ";
+         fullText += chunk.textDelta.replace(/\n/g, "\n> ");
+         triggerChildRerender = true;
+       }
+       if (chunk.type === "text-delta") {
+         outputText += chunk.textDelta;
+         triggerChildRerender = true;
       }
       console.log(chunk);
       if (triggerChildRerender)

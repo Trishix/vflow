@@ -7,7 +7,7 @@ import {
   ArrowDownToLine,
   Bot,
   FileText,
-  Plus,
+  Play,
   SquareStack,
   StickyNote,
   Trash2,
@@ -26,12 +26,13 @@ export const Panels = memo(function Panels() {
 });
 
 const WorkflowActionsPanel = memo(function WorkflowActionsPanel() {
-  const { currentWorkflowId, deleteWorkflow, getCurrentWorkflow, abortAllOperations, isRunning } = useWorkflowStore(
+  const { currentWorkflowId, deleteWorkflow, getCurrentWorkflow, abortAllOperations, runWorkflow, isRunning } = useWorkflowStore(
     useShallow((state: WorkflowState) => ({
       currentWorkflowId: state.currentWorkflowId,
       deleteWorkflow: state.deleteWorkflow,
       getCurrentWorkflow: state.getCurrentWorkflow,
       abortAllOperations: state.abortAllOperations,
+      runWorkflow: state.runWorkflow,
       isRunning: state.getNodes().some((node) => node.data.loading),
     }))
   );
@@ -55,6 +56,16 @@ const WorkflowActionsPanel = memo(function WorkflowActionsPanel() {
   return (
     <Panel position="top-right" className="pointer-events-auto pr-4 pt-4">
       <div className="flex items-center gap-2 rounded-full border border-border/70 bg-background/90 p-1.5 shadow-[0_12px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={runWorkflow}
+          className="gap-2 rounded-full px-4 text-sky-600 hover:bg-sky-500/10 hover:text-sky-700"
+          disabled={isRunning}
+        >
+          <Play className="h-4 w-4" />
+          <span className="hidden sm:inline">Run workflow</span>
+        </Button>
         {isRunning && (
           <Button
             variant="ghost"
