@@ -242,7 +242,6 @@ Support`,
 } satisfies WorkflowSeed;
 
 const meetingRecapSeed = {
-  id: "meeting-recap",
   name: "Meeting recap to action plan",
   nodes: [
     promptNode(
@@ -373,7 +372,6 @@ Use a compact markdown table and keep it ready to paste into a project tracker.`
 } satisfies WorkflowSeed;
 
 const launchBriefSeed = {
-  id: "launch-brief",
   name: "Launch brief generator",
   nodes: [
     promptNode(
@@ -523,7 +521,6 @@ Reusable workflows for support replies, meeting recaps, and launch copy. Less co
 } satisfies WorkflowSeed;
 
 const researchSynthesisSeed = {
-  id: "research-synthesis",
   name: "Research synthesis",
   nodes: [
     promptNode(
@@ -660,7 +657,6 @@ Test one guided path, measure completion, and surface customization after activa
 } satisfies WorkflowSeed;
 
 const salesFollowUpSeed = {
-  id: "sales-follow-up",
   name: "Sales follow-up builder",
   nodes: [
     promptNode(
@@ -797,7 +793,6 @@ Next action: send rollout outline and confirm finance stakeholder`,
 } satisfies WorkflowSeed;
 
 const hiringScreenSeed = {
-  id: "hiring-screen",
   name: "Hiring screen workflow",
   nodes: [
     promptNode(
@@ -946,7 +941,6 @@ Thanks for the conversation. We will share next steps after the panel review.`,
 } satisfies WorkflowSeed;
 
 const welcomeSeed = {
-  id: "welcome",
   name: "Welcome",
   nodes: [
     promptNode(
@@ -1018,6 +1012,16 @@ Use the source node for raw context, the AI node for the transformation, and the
   ],
 } satisfies WorkflowSeed;
 
+const templateIds = [
+  "welcome",
+  "support-triage",
+  "meeting-recap",
+  "launch-brief",
+  "research-synthesis",
+  "sales-follow-up",
+  "hiring-screen",
+];
+
 export const templates: Workflow[] = [
   welcomeSeed,
   supportTriageSeed,
@@ -1026,7 +1030,7 @@ export const templates: Workflow[] = [
   researchSynthesisSeed,
   salesFollowUpSeed,
   hiringScreenSeed,
-].map(makeWorkflow);
+].map((seed, i) => makeWorkflow({ ...seed, id: templateIds[i] }, i));
 
 export const newWorkflow: Workflow = {
   id: "starter-workflow",
