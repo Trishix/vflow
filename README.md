@@ -1,8 +1,7 @@
 # VFLOW
-
 VFLOW is a node-based AI workflow builder that enables you to create, customize, and reuse AI-powered workflows entirely in your browser. Connect prompts, AI models, and data processing nodes to build powerful automation flows without writing code.
 
-![VFLOW Screenshot](https://via.placeholder.com/800x400?text=VFLOW+Workflow+Builder)
+![VFLOW Logo](/public/favicon.png)
 
 ## ✨ Features
 
