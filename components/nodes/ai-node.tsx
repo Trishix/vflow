@@ -19,7 +19,7 @@ import { useCallback, useMemo, useState } from "react";
 import { z } from "zod";
 import { DebouncedTextarea } from "../debounced-textarea";
 import { Button } from "../ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ErrorNode } from "./error-node";
 import { MarkdownNodeData } from "./markdown-node";
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group";
@@ -76,64 +76,55 @@ export const computeAi: ComputeNodeFunction<AiNodeData> = async (
   let fullText: string = ""; // include reasoning
   let outputText = "";
 
-   try {
-     const model = provider.createModel(key, data.modelId, data.reasoning ?? false);
+  try {
+    const model = provider.createModel(key, data.modelId, data.reasoning ?? false);
 
-     const streamOptions: Record<string, any> = {
-       model,
-       system: data.systemPrompt,
-       prompt: formatInputs(inputs),
-       abortSignal,
-     };
+    const messages = [
+      {
+        role: "user" as const,
+        content: [{ type: "text" as const, text: formatInputs(inputs) }],
+      },
+    ];
 
-     // Add reasoning settings for providers that support it
-     if (data.reasoning) {
-       streamOptions.reasoning = {
-         effort: "medium",
-         includeThoughts: true,
-       };
-     }
+    const streamOptions: Parameters<typeof streamText>[0] = {
+      model,
+      messages,
+    };
 
-     const res = streamText(streamOptions);
-
-     const fullstream = res.fullStream;
-     // get the reasoning stream and console log it
-     for await (const chunk of fullstream) {
-       let triggerChildRerender = false;
-       if (chunk.type === "reasoning") {
-         if (fullText.length === 0) fullText += "> ";
-         fullText += chunk.textDelta.replace(/\n/g, "\n> ");
-         triggerChildRerender = true;
-       }
-       if (chunk.type === "text-delta") {
-         outputText += chunk.textDelta;
-         triggerChildRerender = true;
-      }
-      console.log(chunk);
-      if (triggerChildRerender)
-        markdownChilds.forEach((node) => {
-          useWorkflowStore.getState().updateNodeData(node.id, {
-            text: fullText,
-            loading: false,
-            error: undefined,
-            dirty: false,
-          } satisfies MarkdownNodeData);
-        });
+    if (data.systemPrompt) {
+      streamOptions.system = data.systemPrompt;
     }
+
+    const res = streamText(streamOptions);
+
+    const fullstream = res.fullStream;
+    for await (const chunk of fullstream) {
+      if (chunk.type === "text-delta") {
+        outputText += chunk.text;
+      }
+    }
+
+    // Check if execution was aborted before returning result
+    if (abortSignal?.aborted) {
+      return {
+        ...data,
+        error: "Operation was aborted",
+      };
+    }
+
+    return {
+      ...data,
+      error: undefined,
+      dirty: false,
+      output: outputText,
+    };
   } catch (error) {
     console.error(error);
     return {
       ...data,
-      error: `Error generating text: ${error instanceof Error ? error.message : JSON.stringify(error)}`,
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
-
-  return {
-    ...data,
-    error: undefined,
-    dirty: false,
-    output: outputText,
-  };
 };
 
 export const AiNode: NodeTypes[keyof NodeTypes] = (props) => {

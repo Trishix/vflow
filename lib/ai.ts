@@ -1,12 +1,17 @@
-import { google, anthropic, openai, groq, xai } from "ai";
+import { google, createGoogleGenerativeAI } from "@ai-sdk/google";
+import { anthropic, createAnthropic } from "@ai-sdk/anthropic";
+import { openai, createOpenAI } from "@ai-sdk/openai";
+import { groq, createGroq } from "@ai-sdk/groq";
+import { xai, createXai } from "@ai-sdk/xai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import type { LanguageModel } from "ai";
 
 export const providers: Record<
   string,
   {
     models: string[];
     keyUrl: string;
-    createModel: (apiKey: string, modelId: string, reasoning?: boolean) => ReturnType<typeof google>;
+    createModel: (apiKey: string, modelId: string, reasoning?: boolean) => LanguageModel;
   }
 > = {
   "Google Generative AI": {
@@ -22,7 +27,8 @@ export const providers: Record<
       "gemma-3-27b-it",
     ],
     createModel(apiKey: string, modelId: string, _reasoning?: boolean) {
-      return google(modelId, { apiKey, useSearchGrounding: true });
+      const googleProvider = createGoogleGenerativeAI({ apiKey });
+      return googleProvider(modelId);
     },
   },
   Groq: {
@@ -40,8 +46,9 @@ export const providers: Record<
       "qwen-2.5-32b",
       "mistral-saba-24b",
     ],
-    createModel(apiKey, modelId, _reasoning?) {
-      return groq(modelId, { apiKey });
+    createModel(apiKey: string, modelId: string, _reasoning?: boolean) {
+      const groqProvider = createGroq({ apiKey });
+      return groqProvider(modelId);
     },
   },
   OpenAI: {
@@ -63,11 +70,9 @@ export const providers: Record<
       "gpt-3.5-turbo",
       "chatgpt-4o-latest",
     ],
-    createModel(apiKey, modelId, reasoning) {
-      return openai(modelId, {
-        apiKey,
-        reasoningEffort: reasoning ? "medium" : undefined,
-      });
+    createModel(apiKey: string, modelId: string, _reasoning?: boolean) {
+      const openaiProvider = createOpenAI({ apiKey });
+      return openaiProvider(modelId);
     },
   },
   Anthropic: {
@@ -82,11 +87,9 @@ export const providers: Record<
       "claude-3-sonnet-20240229",
       "claude-3-haiku-20240307",
     ],
-    createModel(apiKey, modelId, _reasoning?) {
-      return anthropic(modelId, {
-        apiKey,
-        headers: { "anthropic-dangerous-direct-browser-access": "true" },
-      });
+    createModel(apiKey: string, modelId: string, _reasoning?: boolean) {
+      const anthropicProvider = createAnthropic({ apiKey });
+      return anthropicProvider(modelId);
     },
   },
   OpenRouter: {
@@ -106,7 +109,7 @@ export const providers: Record<
       "deepseek/deepseek-chat",
       "google/gemini-2.0-flash-001",
     ],
-    createModel(apiKey, modelId, _reasoning?) {
+    createModel(apiKey: string, modelId: string, _reasoning?: boolean) {
       const openrouter = createOpenAICompatible({
         name: "openrouter",
         apiKey,
@@ -126,8 +129,9 @@ export const providers: Record<
       "grok-2",
       "grok-beta",
     ],
-    createModel(apiKey, modelId, _reasoning?) {
-      return xai(modelId, { apiKey });
+    createModel(apiKey: string, modelId: string, _reasoning?: boolean) {
+      const xaiProvider = createXai({ apiKey });
+      return xaiProvider(modelId);
     },
   },
 };
