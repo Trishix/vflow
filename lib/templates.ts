@@ -104,7 +104,6 @@ const makeWorkflow = (workflow: WorkflowSeed & { id: string }, index: number): W
 };
 
 const supportTriageSeed = {
-  id: "support-triage",
   name: "Customer support triage",
   nodes: [
     promptNode(
