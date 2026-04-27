@@ -94,17 +94,17 @@ const edge = (source: string, target: string): WorkflowEdge => ({
   animated: false,
 });
 
-const makeWorkflow = (workflow: WorkflowSeed, index: number): Workflow => {
+const makeWorkflow = (workflow: WorkflowSeed & { id: string }, index: number): Workflow => {
   const stamp = new Date(Date.now() - index * 1000).toISOString();
   return {
     ...workflow,
-    id: nanoid(),
     createdAt: stamp,
     updatedAt: stamp,
   };
 };
 
 const supportTriageSeed = {
+  id: "support-triage",
   name: "Customer support triage",
   nodes: [
     promptNode(
@@ -243,6 +243,7 @@ Support`,
 } satisfies WorkflowSeed;
 
 const meetingRecapSeed = {
+  id: "meeting-recap",
   name: "Meeting recap to action plan",
   nodes: [
     promptNode(
@@ -373,6 +374,7 @@ Use a compact markdown table and keep it ready to paste into a project tracker.`
 } satisfies WorkflowSeed;
 
 const launchBriefSeed = {
+  id: "launch-brief",
   name: "Launch brief generator",
   nodes: [
     promptNode(
@@ -522,6 +524,7 @@ Reusable workflows for support replies, meeting recaps, and launch copy. Less co
 } satisfies WorkflowSeed;
 
 const researchSynthesisSeed = {
+  id: "research-synthesis",
   name: "Research synthesis",
   nodes: [
     promptNode(
@@ -658,6 +661,7 @@ Test one guided path, measure completion, and surface customization after activa
 } satisfies WorkflowSeed;
 
 const salesFollowUpSeed = {
+  id: "sales-follow-up",
   name: "Sales follow-up builder",
   nodes: [
     promptNode(
@@ -794,6 +798,7 @@ Next action: send rollout outline and confirm finance stakeholder`,
 } satisfies WorkflowSeed;
 
 const hiringScreenSeed = {
+  id: "hiring-screen",
   name: "Hiring screen workflow",
   nodes: [
     promptNode(
@@ -942,6 +947,7 @@ Thanks for the conversation. We will share next steps after the panel review.`,
 } satisfies WorkflowSeed;
 
 const welcomeSeed = {
+  id: "welcome",
   name: "Welcome",
   nodes: [
     promptNode(
@@ -1024,86 +1030,20 @@ export const templates: Workflow[] = [
 ].map(makeWorkflow);
 
 export const newWorkflow: Workflow = {
-  id: "support-reply-starter",
-  name: "Support reply starter",
-  createdAt: "2026-04-27T00:00:00.000Z",
-  updatedAt: "2026-04-27T00:00:00.000Z",
+  id: "starter-workflow",
+  name: "New Workflow",
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
   nodes: [
     promptNode(
-      "customer-message",
-      `Customer message:
-I still cannot access the updated invoice after switching plans. The old file is blocking finance approval.`,
-      "customer message",
+      "source-node",
+      "Enter your raw text or notes here...",
+      "Source",
       0,
-      -80,
-      500,
-      200
-    ),
-    promptNode(
-      "support-context",
-      `Context:
-- Current plan: Pro
-- Billing mode: quarterly
-- Account owner: finance team
-- Goal: provide a clear next step`,
-      "support context",
       0,
-      180,
-      500,
-      180
-    ),
-    aiNode(
-      "reply-draft",
-      `Draft a concise support reply that acknowledges the issue, states the next step, and stays ready to send.
-Do not mention any internal process details.`,
-      `Hi,
-
-Thanks for flagging this. I understand the invoice access issue is holding up finance approval.
-
-We are checking the billing sync now and I will follow up with the updated invoice as soon as the refresh completes.
-
-Best,
-Support`,
-      0,
-      420,
-      500,
-      320
-    ),
-    markdownNode(
-      "reply-preview",
-      `Hi,
-
-Thanks for flagging this. I understand the invoice access issue is holding up finance approval.
-
-We are checking the billing sync now and I will follow up with the updated invoice as soon as the refresh completes.
-
-Best,
-Support`,
-      0,
-      820,
-      620,
-      320
-    ),
-    noteNode(
-      "starter-note-1",
-      "Add more source context here if you want the reply to be more specific.",
-      -340,
-      -220,
-      340,
-      150
-    ),
-    noteNode(
-      "starter-note-2",
-      "This starter keeps the first workflow short while still being useful on day one.",
-      640,
-      520,
-      360,
+      400,
       150
     ),
   ],
-  edges: [
-    edge("customer-message", "reply-draft"),
-    edge("support-context", "reply-draft"),
-    edge("reply-draft", "reply-preview"),
-  ],
+  edges: [],
 };

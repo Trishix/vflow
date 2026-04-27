@@ -54,6 +54,7 @@ export interface Workflow {
   edges: Edge[];
   createdAt: Date | string;
   updatedAt: Date | string;
+  isTemplate?: boolean;
 }
 
 export interface WorkflowState {
@@ -96,7 +97,7 @@ export interface WorkflowState {
 }
 
 const generateId = () => nanoid();
-const CURRENT_STORAGE_VERSION = 5;
+const CURRENT_STORAGE_VERSION = 6;
 
 // Create consistent empty arrays to avoid infinite loops
 const EMPTY_NODES: Node[] = [];
@@ -114,15 +115,18 @@ export const useWorkflowStore = create<WorkflowState>()(
   persist(
     (set, get) => ({
       abortController: new AbortController(),
-      workflows: templates,
+      workflows: templates.map(t => ({ ...t, isTemplate: true })),
       currentWorkflowId: templates[0].id,
 
       createWorkflow: (name?: string) => {
         const id = generateId();
+        const userWorkflows = get().workflows.filter(w => !w.isTemplate);
+        const nextNumber = userWorkflows.length + 1;
+        
         const workflow: Workflow = {
           id,
-          name: name || `Workflow ${get().workflows.length + 1}`,
-          nodes: [...newWorkflow.nodes],
+          name: name || `Workflow ${nextNumber}`,
+          nodes: [...newWorkflow.nodes.map(n => ({ ...n, id: generateId() }))], // Ensure unique node IDs
           edges: [...newWorkflow.edges],
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -681,6 +685,21 @@ export const useWorkflowStore = create<WorkflowState>()(
             workflows: upgradedWorkflows,
             currentWorkflowId: state.currentWorkflowId ?? upgradedWorkflows[0]?.id ?? null,
           };
+        }
+
+        if (version < 6 && state.workflows) {
+          const templateNames = new Set(templates.map(t => t.name));
+          state.workflows = state.workflows.map(workflow => {
+            if (templateNames.has(workflow.name)) {
+              const template = templates.find(t => t.name === workflow.name);
+              return {
+                ...workflow,
+                id: template?.id || workflow.id,
+                isTemplate: true
+              };
+            }
+            return workflow;
+          });
         }
 
         if (state.workflows[0]?.name === templates[0].name) {

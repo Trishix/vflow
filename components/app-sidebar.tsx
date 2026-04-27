@@ -21,49 +21,35 @@ import { useShallow } from "zustand/react/shallow";
 import ApiKeys from "./api-keys";
 import ImportDialog from "./import-dialog";
 import Logo from "./logo";
+import { templates } from "@/lib/templates";
 
 export function AppSidebar() {
   const { setTheme,resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  const { createWorkflow, switchWorkflow, currentWorkflowId } = useWorkflowStore(
+  const { createWorkflow, switchWorkflow, currentWorkflowId, workflows } = useWorkflowStore(
     useShallow((state) => ({
       createWorkflow: state.createWorkflow,
       switchWorkflow: state.switchWorkflow,
       currentWorkflowId: state.currentWorkflowId,
+      workflows: state.workflows,
     }))
   );
 
-  const serializedWorkflows = useWorkflowStore(
-    useShallow((state) =>
-      state.workflows
-        .map((workflow) => ({
-          name: workflow.name,
-          id: workflow.id,
-          createdAt: new Date(workflow.createdAt).toISOString(),
-        }))
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .map((workflow) => `${workflow.name}:${workflow.id}`)
-    )
-  );
-
-  const workflows = useMemo(() => {
-    return serializedWorkflows.map((workflow) => {
-      const lastDashIndex = workflow.lastIndexOf(":");
-      const name = workflow.substring(0, lastDashIndex);
-      const id = workflow.substring(lastDashIndex + 1);
-      return {
-        name,
-        id,
-      };
-    });
-  }, [serializedWorkflows]);
+  const { userWorkflows, exampleWorkflows } = useMemo(() => {
+    const templateIds = new Set(templates.map(t => t.id));
+    const user = workflows
+      .filter(w => !w.isTemplate && !templateIds.has(w.id))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const examples = workflows.filter(w => w.isTemplate || templateIds.has(w.id));
+    return { userWorkflows: user, exampleWorkflows: examples };
+  }, [workflows]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const menuItems = workflows.map((workflow) => (
+  const renderMenuItems = (items: typeof workflows) => items.map((workflow) => (
     <SidebarMenuItem key={workflow.id}>
       <SidebarMenuButton onClick={() => switchWorkflow(workflow.id)} isActive={workflow.id === currentWorkflowId}>
         <span className="truncate">{workflow.name}</span>
@@ -100,18 +86,31 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        
         <SidebarGroup>
           <SidebarGroupLabel>Workflows</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mounted ? (
-                menuItems
+                renderMenuItems(userWorkflows)
               ) : (
                 <>
                   <SidebarMenuSkeleton />
                   <SidebarMenuSkeleton />
-                  <SidebarMenuSkeleton />
-                  <SidebarMenuSkeleton />
+                </>
+              )}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Examples</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {mounted ? (
+                renderMenuItems(exampleWorkflows)
+              ) : (
+                <>
                   <SidebarMenuSkeleton />
                   <SidebarMenuSkeleton />
                 </>
